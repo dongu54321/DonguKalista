@@ -134,7 +134,7 @@ namespace Kalista
             if (Config.Item("cq").GetValue<bool>())
             {   
             	var pre = Q.GetPrediction(target);
-            	if (Q.IsReady() && !Player.IsDashing() && pre.Hitchance >= HitChance.VeryHigh )
+            	if (Q.IsReady() && !Player.IsDashing() && !Player.IsWindingUp && pre.Hitchance >= HitChance.VeryHigh )
             		Q.Cast(pre.CastPosition, true);
             }
             if (Config.Item("ce").GetValue<bool>()  )            	
