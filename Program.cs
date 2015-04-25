@@ -84,7 +84,7 @@ namespace Kalista
             Config.AddSubMenu(ksmenu);           
             Config.AddToMainMenu();
             Game.OnUpdate += Game_OnUpdate;
-            Game.PrintChat("Kalista by dongu54321 Loaded");
+            Game.PrintChat("Kalista Beta version 1.0.0.7 Loaded");
             Orbwalking.OnNonKillableMinion += Orbwalking_OnNonKillableMinion;
             Obj_AI_Hero.OnProcessSpellCast += Obj_AI_Hero_OnProcessSpellCast;            
             Utility.HpBarDamageIndicator.DamageToUnit = GetEDamage;
