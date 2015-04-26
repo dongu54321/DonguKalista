@@ -160,7 +160,7 @@ namespace Kalista
             if (Config.Item("hq").GetValue<bool>())
             {
                 var Qtarget = TargetSelector.GetTarget(Q.Range, TargetSelector.DamageType.Physical, true);
-                if (Q.CanCast(Qtarget)  && !Player.IsDashing())
+                if (Q.CanCast(Qtarget)  && !Player.IsDashing() && !Player.IsWindingUp)
                 	Q.CastIfHitchanceEquals(Qtarget, HitChance.VeryHigh);
             }
         }
@@ -181,7 +181,7 @@ namespace Kalista
                 if (Player.ManaPercent <  Config.Item("harrasmana").GetValue<Slider>().Value) return;
                 var t = TargetSelector.GetTarget(E.Range,TargetSelector.DamageType.Physical,true);
                 if (t.HasBuff("KalistaExpungeMarker") && minionkillcount >= 1) {E.Cast(); debug("Harras e with minion kill");}
-                if (Q.CanCast(t)  && !Player.IsDashing())
+                if (Q.CanCast(t)  && !Player.IsDashing() && !Player.IsWindingUp)
                 	Q.CastIfHitchanceEquals(t, HitChance.VeryHigh);
             }
             
