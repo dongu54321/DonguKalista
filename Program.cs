@@ -178,15 +178,15 @@ namespace Kalista
                 foreach (var Minion in Minions.Where(x => E.CanCast(x) && x.Health <= GetEDamage(x))){minionkillcount++;}
                 if (minionkillcount >= z)
                 {E.Cast();debug("E LaneClear");}
-                if (Player.ManaPercent <  Config.Item("harrasmana").GetValue<Slider>().Value) return;
+                if (Player.ManaPercent <  Config.Item("harrasmana").GetValue<Slider>().Value) 
+                {
                 var t = TargetSelector.GetTarget(E.Range,TargetSelector.DamageType.Physical,true);
                 if (t.HasBuff("KalistaExpungeMarker") && minionkillcount >= 1) {E.Cast(); debug("Harras e with minion kill");}
                 if (Q.CanCast(t)  && !Player.IsDashing() && !Player.IsWindingUp)
                 	Q.CastIfHitchanceEquals(t, HitChance.VeryHigh);
-            }
-            
-            
-            
+                }
+            }                    
+                        
         }
        static void JungleClear()
        {  
@@ -207,10 +207,10 @@ namespace Kalista
 	}
         static void MobSteal()
         {   
-        	var a = Config.Item("edamereduce").GetValue<Slider>().Value;
+        	
         	if (Config.Item("mobsteal").GetValue<bool>() && 
         		
-        	    (ObjectManager.Get<Obj_AI_Minion>().Any(m => m.IsValidTarget(E.Range) && (m.BaseSkinName.Contains("MinionSiege") || m.BaseSkinName.Contains("Dragon") || m.BaseSkinName.Contains("Baron")|| m.BaseSkinName.Contains("SRU_Blue")|| m.BaseSkinName.Contains("SRU_Red")) && m.Health+10 +a<GetEDamage(m))))
+        	    (ObjectManager.Get<Obj_AI_Minion>().Any(m => m.IsValidTarget(E.Range) && (m.BaseSkinName.Contains("MinionSiege") || m.BaseSkinName.Contains("Dragon") || m.BaseSkinName.Contains("Baron")|| m.BaseSkinName.Contains("SRU_Blue")|| m.BaseSkinName.Contains("SRU_Red")) && m.Health+10 <GetEDamage(m))))
         	    {   if (E.IsReady())
         		     {E.Cast();debug("E MobSteal Big Monster And MinionSiege");}
                    
