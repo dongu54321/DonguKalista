@@ -130,7 +130,7 @@ namespace Kalista
 	static void Combo()
         { 				
 		var target = TargetSelector.GetTarget(Q.Range, TargetSelector.DamageType.Physical);
-		  Items(target);
+		    useItems();
             if (Config.Item("cq").GetValue<bool>())
             {   
             	var pre = Q.GetPrediction(target);
@@ -216,21 +216,24 @@ namespace Kalista
                    
                 }
         }
-        static void Items(Obj_AI_Base target)
-        {
-            var botrk = ItemData.Blade_of_the_Ruined_King.GetItem();
-            var ghost = ItemData.Youmuus_Ghostblade.GetItem();
-            var cutlass = ItemData.Bilgewater_Cutlass.GetItem();
-            if (botrk.IsReady() && botrk.IsOwned(Player) && botrk.IsInRange(target))
-              
-            {
-                botrk.Cast(target);
-            }
+        static void useItems()
+        {   var target = TargetSelector.GetTarget(450,TargetSelector.DamageType.Physical,true);
+        	if (target != null && target.Type == ObjectManager.Player.Type &&
+                    target.ServerPosition.Distance(ObjectManager.Player.ServerPosition) < 450)
+                {
+                    var hasCutGlass = Items.HasItem(3144);
+                    var hasBotrk = Items.HasItem(3153);
 
-            if (cutlass.IsReady() && cutlass.IsOwned(Player) && cutlass.IsInRange(target)  )
-            {
-                cutlass.Cast(target);
-            }
+                    if (hasBotrk || hasCutGlass)
+                    {
+                        var itemId = hasCutGlass ? 3144 : 3153;
+                        var damage = ObjectManager.Player.GetItemDamage(target, Damage.DamageItems.Botrk);
+                        if (hasCutGlass || ObjectManager.Player.Health + damage < ObjectManager.Player.MaxHealth)
+                            Items.UseItem(itemId, target);
+                    }
+                }
+            var ghost = ItemData.Youmuus_Ghostblade.GetItem();           
+    
 
             if (ghost.IsReady() && ghost.IsOwned(Player) && target.IsValidTarget(Q.Range))
             {
