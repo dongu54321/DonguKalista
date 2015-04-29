@@ -212,7 +212,7 @@ namespace Kalista
         	
         	if (Config.Item("mobsteal").GetValue<bool>() && 
         		
-        	    (ObjectManager.Get<Obj_AI_Minion>().Any(m => m.IsValidTarget(E.Range) && (m.BaseSkinName.Contains("MinionSiege") || m.BaseSkinName.Contains("Dragon") || m.BaseSkinName.Contains("Baron")|| m.BaseSkinName.Contains("SRU_Blue")|| m.BaseSkinName.Contains("SRU_Red")) && m.Health+10 < GetEDamage(m))))
+        	    (ObjectManager.Get<Obj_AI_Minion>().Any(m => m.IsValidTarget(E.Range) && (m.BaseSkinName.Contains("Siege") || m.BaseSkinName.Contains("Dragon") || m.BaseSkinName.Contains("Baron")|| m.BaseSkinName.Contains("SRU_Blue")|| m.BaseSkinName.Contains("SRU_Red")) && m.Health+10 < GetEDamage(m))))
         	    {   if (E.IsReady())
         		     {E.Cast();debug("E MobSteal Big Monster And MinionSiege");}
                    
