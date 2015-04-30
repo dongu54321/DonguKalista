@@ -86,11 +86,11 @@ namespace Kalista
             Game.OnUpdate += Game_OnUpdate;
             Game.PrintChat("DonguKalista by dongu54321 Loaded");
             Orbwalking.OnNonKillableMinion += Orbwalking_OnNonKillableMinion;
-            Obj_AI_Hero.OnProcessSpellCast += Obj_AI_Hero_OnProcessSpellCast;            
+            Obj_AI_Hero.OnProcessSpellCast += Obj_AI_Hero_OnProcessSpellCast;                  
             Utility.HpBarDamageIndicator.DamageToUnit = GetEDamage;
             Utility.HpBarDamageIndicator.Enabled = true;          
 	}
-       static void Orbwalking_OnNonKillableMinion(AttackableUnit minion)
+       	static void Orbwalking_OnNonKillableMinion(AttackableUnit minion)
         {
             if (!Config.Item("lasthitassist").GetValue<bool>())
                 return;
@@ -99,15 +99,15 @@ namespace Kalista
             {E.Cast();debug("E last hit helper");}
         }
 	  
-      static void Obj_AI_Hero_OnProcessSpellCast(Obj_AI_Base sender, GameObjectProcessSpellCastEventArgs args)
+      	static void Obj_AI_Hero_OnProcessSpellCast(Obj_AI_Base sender, GameObjectProcessSpellCastEventArgs args)
         {
             if (sender.IsMe && args.SData.Name == "KalistaExpungeWrapper")
                     Utility.DelayAction.Add(200, Orbwalking.ResetAutoAttackTimer);            
         }
-		
-          
-     static void Game_OnUpdate(EventArgs args)
-	  {      
+	
+        
+     	static void Game_OnUpdate(EventArgs args)
+	  	{      
 			KillSteal();
             switch (Orbwalker.ActiveMode)
             {
@@ -125,9 +125,9 @@ namespace Kalista
                     break;
             }         
             MobSteal();            
-	}
+		}
 	 //Combo
-	static void Combo()
+		static void Combo()
         { 
 		var target = TargetSelector.GetSelectedTarget();
 		if (!Orbwalker.InAutoAttackRange(target)) 
@@ -136,8 +136,7 @@ namespace Kalista
             if (Config.Item("cq").GetValue<bool>())
             {   
             	var pre = Q.GetPrediction(target);
-            	if (Q.IsReady() && !Player.IsDashing() &&  pre.Hitchance >= HitChance.VeryHigh )
-            		Q.Cast(pre.CastPosition, true);
+            	if (Q.IsReady() && !Player.IsDashing()) Q.CastIfHitchanceEquals(target, HitChance.VeryHigh,true);
             }
             if (Config.Item("ce").GetValue<bool>()  )            	
             { 
@@ -154,7 +153,7 @@ namespace Kalista
             }            
         }
         //Harrass
-		 static void Harass()
+		static void Harass()
         {
 	    if (Player.ManaPercent <  Config.Item("harrasmana").GetValue<Slider>().Value)
                 return;
@@ -166,7 +165,7 @@ namespace Kalista
                 	Q.CastIfHitchanceEquals(Qtarget, HitChance.VeryHigh);
             }
         }
- 	static void Laneclear()
+ 		static void Laneclear()
         {  
             if (Player.ManaPercent < Config.Item("fmana").GetValue<Slider>().Value)
                 return;
@@ -190,9 +189,9 @@ namespace Kalista
             }                    
                         
         }
-       static void JungleClear()
-       {  
-	   var mobs = MinionManager.GetMinions(Player.ServerPosition, Q.Range, MinionTypes.All, MinionTeam.Neutral, MinionOrderTypes.Health);            
+       	static void JungleClear()
+       	{  
+	   	var mobs = MinionManager.GetMinions(Player.ServerPosition, Q.Range, MinionTypes.All, MinionTeam.Neutral, MinionOrderTypes.Health);            
             if (mobs.Count == 0)
                 return;
             var mob = mobs.First();            
@@ -206,7 +205,7 @@ namespace Kalista
             	{E.Cast();debug("E JungleClear");}
             }
         
-	}
+		}
         static void MobSteal()
         {   
         	
@@ -249,7 +248,7 @@ namespace Kalista
         	{   
 				            	
             	var qdamage = Player.GetSpellDamage(enemy, SpellSlot.Q);
-            	 var edamage = GetEDamage(enemy);
+            	var edamage = GetEDamage(enemy);
             	if  (!Config.Item("ks").GetValue<bool>() || (enemy.IsInvulnerable)||enemy.HasBuff("deathdefiedbuff"))
         			return;	 
                 //E
@@ -282,18 +281,33 @@ namespace Kalista
             var a = Config.Item("edamereduce").GetValue<Slider>().Value;        		
             double armorPenPercent = Player.PercentArmorPenetrationMod;
             double armorPenFlat = Player.FlatArmorPenetrationMod;
-            double k;
-            double damage = 0f;
+            double k;          
 			var armor = target.Armor; 
 			if (armor < 0) {k = 2 - 100 / (100 - armor);}
             else if ((target.Armor * armorPenPercent) - armorPenFlat < 0) k = 1;
             else  {k = 100 / (100 + (target.Armor * armorPenPercent) - armorPenFlat);}
-            if (Player.Masteries.Any(m => m.Page == MasteryPage.Offense && m.Id == 65 && m.Points == 1)) k= k*1.015;
-            if (Player.Masteries.Any(m => m.Page == MasteryPage.Offense && m.Id == 146 && m.Points == 1)) k=k*1.03;                         
-            		
-			damage += new double[] {20, 30, 40, 50, 60}[E.Level -1] + Player.TotalAttackDamage*0.6f + (  new double[] {10, 14, 19, 25, 32 }[E.Level -1]+ new double[]{0.2f, 0.225f, 0.25f, 0.275f, 0.3f }[E.Level-1] *  Player.TotalAttackDamage) * (buff.Count-1);          
-			return (float) (damage*k-a);
-        	}
+                               
+            if (target is Obj_AI_Hero)
+                {   
+            		double damage = Player.GetAutoAttackDamage(target);
+            	    if (Player.Masteries.Any(m => m.Page == MasteryPage.Offense && m.Id == 65 && m.Points == 1)) k= k*1.015;
+            		if (Player.Masteries.Any(m => m.Page == MasteryPage.Offense && m.Id == 146 && m.Points == 1)) k=k*1.03;                         
+                    var mastery = Player.Masteries.FirstOrDefault(m => m.Page == MasteryPage.Offense && m.Id == 100);
+                    if (mastery != null && mastery.Points >= 1 &&
+                        target.Health / target.MaxHealth <= 0.05d + 0.15d * mastery.Points)
+                    {
+                        k = k * 1.05;
+                    }
+                    damage += new double[] {20, 30, 40, 50, 60}[E.Level -1] + Player.TotalAttackDamage*0.60 + (  new double[] {10, 14, 19, 25, 32 }[E.Level -1]+ new double[]{0.2f, 0.225f, 0.25f, 0.275f, 0.3f }[E.Level-1] *  Player.TotalAttackDamage) * (buff.Count-1);          
+					return (float) (damage*k-a);
+                }
+             if (target is Obj_AI_Minion)
+             	{   
+             	    double damage1 = 0;
+            		damage1 += new double[] {20, 30, 40, 50, 60}[E.Level -1] + Player.TotalAttackDamage*0.60 + (  new double[] {10, 14, 19, 25, 32 }[E.Level -1]+ new double[]{0.2f, 0.225f, 0.25f, 0.275f, 0.3f }[E.Level-1] *  Player.TotalAttackDamage) * (buff.Count-1); 
+					return (float) (damage1*k-a);
+             	}
+             }
         	return 1;
         }
           
