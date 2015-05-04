@@ -289,7 +289,7 @@ namespace Kalista
                                
             if (target is Obj_AI_Hero)
                 {   
-            		double damage = Player.GetAutoAttackDamage(target)*0.5;
+            		double damage = Player.GetAutoAttackDamage(target)*0.3;
             	    if (Player.Masteries.Any(m => m.Page == MasteryPage.Offense && m.Id == 65 && m.Points == 1)) k= k*1.015;
             		if (Player.Masteries.Any(m => m.Page == MasteryPage.Offense && m.Id == 146 && m.Points == 1)) k=k*1.03;                         
                     var mastery = Player.Masteries.FirstOrDefault(m => m.Page == MasteryPage.Offense && m.Id == 100);
