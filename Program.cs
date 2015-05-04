@@ -142,7 +142,7 @@ namespace Kalista
             { 
                 if (!target.HasBuffOfType(BuffType.Invulnerability) && !target.HasBuff("shenstandunitedshield", true))
                     {
-                	if ((target.Health  + target.HPRegenRate/2) <= GetEDamage(target) && E.IsReady() && target.IsValidTarget(E.Range))
+                	if ((target.Health  + target.HPRegenRate) <= GetEDamage(target) && E.IsReady() && target.IsValidTarget(E.Range))
                 	{debug( GetEDamage(target)+"damage Ecombo kill target: "+ target.Health+"/"+target.MaxHealth);E.Cast();}
                     }
                 else if (!Orbwalker.InAutoAttackRange(target) && target.HasBuff("KalistaExpungeMarker"))
@@ -252,7 +252,7 @@ namespace Kalista
             	if  (!Config.Item("ks").GetValue<bool>() || (enemy.IsInvulnerable)||enemy.HasBuff("deathdefiedbuff"))
         			return;	 
                 //E
-               if ( E.IsReady() &&  Config.Item("eks").GetValue<bool>() && edamage >= (enemy.Health+enemy.HPRegenRate/3) && !enemy.HasBuffOfType(BuffType.Invulnerability)  && !enemy.HasBuff("shenstandunitedshield", true))
+               if ( E.IsReady() &&  Config.Item("eks").GetValue<bool>() && edamage >= (enemy.Health+enemy.HPRegenRate) && !enemy.HasBuffOfType(BuffType.Invulnerability)  && !enemy.HasBuff("shenstandunitedshield", true))
                 {
                 	if ( enemy.IsValidTarget(E.Range) )
                 	    
@@ -289,14 +289,14 @@ namespace Kalista
                                
             if (target is Obj_AI_Hero)
                 {   
-            		double damage = Player.GetAutoAttackDamage(target);
+            		double damage = Player.GetAutoAttackDamage(target)*0.5;
             	    if (Player.Masteries.Any(m => m.Page == MasteryPage.Offense && m.Id == 65 && m.Points == 1)) k= k*1.015;
             		if (Player.Masteries.Any(m => m.Page == MasteryPage.Offense && m.Id == 146 && m.Points == 1)) k=k*1.03;                         
                     var mastery = Player.Masteries.FirstOrDefault(m => m.Page == MasteryPage.Offense && m.Id == 100);
                     if (mastery != null && mastery.Points >= 1 &&
                         target.Health / target.MaxHealth <= 0.05d + 0.15d * mastery.Points)
                     {
-                        k = k * 1.05;
+                        k = k * 1.04;
                     }
                     damage += new double[] {20, 30, 40, 50, 60}[E.Level -1] + Player.TotalAttackDamage*0.60 + (  new double[] {10, 14, 19, 25, 32 }[E.Level -1]+ new double[]{0.2f, 0.225f, 0.25f, 0.275f, 0.3f }[E.Level-1] *  Player.TotalAttackDamage) * (buff.Count-1);          
 					return (float) (damage*k-a);
