@@ -307,7 +307,7 @@ namespace Kalista
                         k = k * 1.04;
                     }
                     damage += new double[] {20, 30, 40, 50, 60}[E.Level -1] + Player.TotalAttackDamage*0.60 + (  new double[] {10, 14, 19, 25, 32 }[E.Level -1]+ new double[]{0.2f, 0.225f, 0.25f, 0.275f, 0.3f }[E.Level-1] *  Player.TotalAttackDamage) * (buff.Count-1);          
-                    return (float) ((damage*k)-3-a);
+                    return (float) (damage*k-a);
                 }
              if (target is Obj_AI_Minion)
              	{   
