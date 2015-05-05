@@ -4,7 +4,7 @@ using System.Linq;
 using LeagueSharp.Common.Data;
 using LeagueSharp;
 using LeagueSharp.Common;
-
+using Color = System.Drawing.Color;
 namespace Kalista
 {
   class Program
@@ -70,6 +70,7 @@ namespace Kalista
                 miscmenu.AddItem(new MenuItem("mobsteal", "Steal Mods").SetValue(true));
                 miscmenu.AddItem(new MenuItem("edamereduce", "E dame ruduce").SetValue(new Slider(0, 100, 0)));
                 miscmenu.AddItem(new MenuItem("lasthitassist", "Use E To Last Hit").SetValue(true));
+                miscmenu.AddItem(new MenuItem("drawDamageE","Draw E damage").SetValue(true));
             }
             Config.AddSubMenu(miscmenu);            
              var ksmenu = new Menu("KillSteal", "KillSteal");
@@ -88,8 +89,15 @@ namespace Kalista
             Orbwalking.OnNonKillableMinion += Orbwalking_OnNonKillableMinion;
             Obj_AI_Hero.OnProcessSpellCast += Obj_AI_Hero_OnProcessSpellCast;                  
             Utility.HpBarDamageIndicator.DamageToUnit = GetEDamage;
-            Utility.HpBarDamageIndicator.Enabled = true;          
-	}
+            Utility.HpBarDamageIndicator.Enabled = true;
+            CustomDamageIndicator.Initialize(GetEDamage);            	
+		}
+		 private static void Drawing_OnDraw(EventArgs args)
+        {
+		 	CustomDamageIndicator.DrawingColor = Color.Green;
+		 	CustomDamageIndicator.Enabled = Config.Item("drawDamageE").GetValue<bool>();
+		 }
+       
        	static void Orbwalking_OnNonKillableMinion(AttackableUnit minion)
         {
             if (!Config.Item("lasthitassist").GetValue<bool>())
@@ -278,7 +286,7 @@ namespace Kalista
         {  var buff = target.Buffs.Find(b => b.Caster.IsMe && b.IsValidBuff() && b.DisplayName == "KalistaExpungeMarker");;
         	if (buff!=null && E.IsReady())
         	{
-            var a = Config.Item("edamereduce").GetValue<Slider>().Value;        		
+            double a = Config.Item("edamereduce").GetValue<Slider>().Value;        		
             double armorPenPercent = Player.PercentArmorPenetrationMod;
             double armorPenFlat = Player.FlatArmorPenetrationMod;
             double k;          
@@ -299,7 +307,7 @@ namespace Kalista
                         k = k * 1.04;
                     }
                     damage += new double[] {20, 30, 40, 50, 60}[E.Level -1] + Player.TotalAttackDamage*0.60 + (  new double[] {10, 14, 19, 25, 32 }[E.Level -1]+ new double[]{0.2f, 0.225f, 0.25f, 0.275f, 0.3f }[E.Level-1] *  Player.TotalAttackDamage) * (buff.Count-1);          
-					return (float) (damage*k-a);
+                    return (float) ((damage*k)-3-a);
                 }
              if (target is Obj_AI_Minion)
              	{   
