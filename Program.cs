@@ -69,9 +69,13 @@ namespace Kalista
                 miscmenu.AddItem(new MenuItem("rsave","Use R to save soul").SetValue(true));
                 miscmenu.AddItem(new MenuItem("mobsteal", "Steal Mods").SetValue(true));
                 miscmenu.AddItem(new MenuItem("edamereduce", "E dame ruduce").SetValue(new Slider(0, 100, 0)));
-                miscmenu.AddItem(new MenuItem("lasthitassist", "Use E To Last Hit").SetValue(true));
-                miscmenu.AddItem(new MenuItem("drawDamageE","Draw E damage").SetValue(true));
+                miscmenu.AddItem(new MenuItem("lasthitassist", "Use E To Last Hit").SetValue(true));                
+               
             }
+             MenuItem drawEDamageMenu = new MenuItem("Draw_EDamage", "Draw E Damage",true).SetValue(true);
+             MenuItem drawFill = new MenuItem("Draw_Fill", "Draw E Damage Fill",true).SetValue(new Circle(true, Color.FromArgb(90, 255, 169, 4))); 
+             miscmenu.AddItem(drawEDamageMenu);
+             miscmenu.AddItem(drawFill);
             Config.AddSubMenu(miscmenu);            
              var ksmenu = new Menu("KillSteal", "KillSteal");
             {
@@ -82,20 +86,38 @@ namespace Kalista
             }
             
             Config.AddItem(new MenuItem("debug", "Debug").SetValue(false));
-            Config.AddSubMenu(ksmenu);           
+            Config.AddSubMenu(ksmenu);
+			                          
             Config.AddToMainMenu();
             Game.OnUpdate += Game_OnUpdate;
             Game.PrintChat("DonguKalista by dongu54321 Loaded");
             Orbwalking.OnNonKillableMinion += Orbwalking_OnNonKillableMinion;
-            Obj_AI_Hero.OnProcessSpellCast += Obj_AI_Hero_OnProcessSpellCast;                  
+            Obj_AI_Hero.OnProcessSpellCast += Obj_AI_Hero_OnProcessSpellCast;                                          
             Utility.HpBarDamageIndicator.DamageToUnit = GetEDamage;
             Utility.HpBarDamageIndicator.Enabled = true;
-            CustomDamageIndicator.Initialize(GetEDamage);            	
+                DamageIndicator.DamageToUnit = GetEDamage;
+                DamageIndicator.Enabled = drawEDamageMenu.GetValue<bool>();
+                DamageIndicator.Fill = drawFill.GetValue<Circle>().Active;
+                DamageIndicator.FillColor = drawFill.GetValue<Circle>().Color;
+                drawEDamageMenu.ValueChanged +=
+                    delegate(object sender, OnValueChangeEventArgs eventArgs)
+                    {
+                        DamageIndicator.Enabled = eventArgs.GetNewValue<bool>();
+                    };
+                drawFill.ValueChanged +=
+                    delegate(object sender, OnValueChangeEventArgs eventArgs)
+                    {
+                        DamageIndicator.Fill = eventArgs.GetNewValue<Circle>().Active;
+                        DamageIndicator.FillColor = eventArgs.GetNewValue<Circle>().Color;
+                    };
+            
 		}
 		 private static void Drawing_OnDraw(EventArgs args)
-        {
-		 	CustomDamageIndicator.DrawingColor = Color.Green;
-		 	CustomDamageIndicator.Enabled = Config.Item("drawDamageE").GetValue<bool>();
+		 {  bool enbabled = Config.Item("drawDamageE").GetValue<bool>();
+		 	if (enbabled)
+		 	{		
+		 	
+		 	}
 		 }
        
        	static void Orbwalking_OnNonKillableMinion(AttackableUnit minion)
@@ -143,8 +165,8 @@ namespace Kalista
 		    useItems();
             if (Config.Item("cq").GetValue<bool>())
             {   
-            	var pre = Q.GetPrediction(target);
-            	if (Q.IsReady() && !Player.IsDashing()) Q.CastIfHitchanceEquals(target, HitChance.VeryHigh,true);
+            	if (Player.Mana >= Q.Instance.ManaCost + E.Instance.ManaCost - 10){
+            		if (Q.IsReady() && !Player.IsDashing()) Q.CastIfHitchanceEquals(target, HitChance.VeryHigh);}
             }
             if (Config.Item("ce").GetValue<bool>()  )            	
             { 
@@ -286,8 +308,9 @@ namespace Kalista
         {  var buff = target.Buffs.Find(b => b.Caster.IsMe && b.IsValidBuff() && b.DisplayName == "KalistaExpungeMarker");;
         	if (buff!=null && E.IsReady())
         	{
-            double a = Config.Item("edamereduce").GetValue<Slider>().Value;        		
-            double armorPenPercent = Player.PercentArmorPenetrationMod;
+            var a = Config.Item("edamereduce").GetValue<Slider>().Value; 
+            if (target.InventoryItems.Any(m => m.DisplayName == "Doran's Shield")) {a += a+8;}
+			double armorPenPercent = Player.PercentArmorPenetrationMod;
             double armorPenFlat = Player.FlatArmorPenetrationMod;
             double k;          
 			var armor = target.Armor; 
@@ -304,7 +327,7 @@ namespace Kalista
                     if (mastery != null && mastery.Points >= 1 &&
                         target.Health / target.MaxHealth <= 0.05d + 0.15d * mastery.Points)
                     {
-                        k = k * 1.04;
+                        k = k * 1.05;
                     }
                     damage += new double[] {20, 30, 40, 50, 60}[E.Level -1] + Player.TotalAttackDamage*0.60 + (  new double[] {10, 14, 19, 25, 32 }[E.Level -1]+ new double[]{0.2f, 0.225f, 0.25f, 0.275f, 0.3f }[E.Level-1] *  Player.TotalAttackDamage) * (buff.Count-1);          
                     return (float) (damage*k-a);
