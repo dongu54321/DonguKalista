@@ -14,6 +14,7 @@ namespace Kalista
         static Orbwalking.Orbwalker Orbwalker;
         static Menu Config;
         static Spell Q, W, E, R;
+        static Obj_AI_Hero ConnectedAlly;
         
        public static void Main(string[] args)
 	{
@@ -44,7 +45,9 @@ namespace Kalista
              var combomenu = new Menu("Combo", "Combo");
             {
                 combomenu.AddItem(new MenuItem("cq", "Use Q").SetValue(true));            
-                combomenu.AddItem(new MenuItem("ce", "Use E").SetValue(true));               
+                combomenu.AddItem(new MenuItem("ce", "Use E").SetValue(true));
+                combomenu.AddItem(new MenuItem("Ekillminion", "Use E if kill minion").SetValue(true));
+                
             }
              Config.AddSubMenu(combomenu);
             //Harrassmenu
@@ -67,6 +70,7 @@ namespace Kalista
             var miscmenu = new Menu("Misc", "Misc");
             {               
                 miscmenu.AddItem(new MenuItem("rsave","Use R to save soul").SetValue(true));
+                miscmenu.AddItem(new MenuItem("allyhp", "If Ally HP under ").SetValue(new Slider(10, 100, 5)));
                 miscmenu.AddItem(new MenuItem("mobsteal", "Steal Mods").SetValue(true));
                 miscmenu.AddItem(new MenuItem("edamereduce", "E dame ruduce").SetValue(new Slider(0, 100, 0)));
                 miscmenu.AddItem(new MenuItem("lasthitassist", "Use E To Last Hit").SetValue(true));                
@@ -76,7 +80,7 @@ namespace Kalista
              MenuItem drawFill = new MenuItem("Draw_Fill", "Draw E Damage Fill",true).SetValue(new Circle(true, Color.FromArgb(90, 255, 169, 4))); 
              miscmenu.AddItem(drawEDamageMenu);
              miscmenu.AddItem(drawFill);
-            Config.AddSubMenu(miscmenu);            
+             Config.AddSubMenu(miscmenu);            
              var ksmenu = new Menu("KillSteal", "KillSteal");
             {
              ksmenu.AddItem(new MenuItem("ks", "KillSteal").SetValue(true));
@@ -112,13 +116,7 @@ namespace Kalista
                     };
             
 		}
-		 private static void Drawing_OnDraw(EventArgs args)
-		 {  bool enbabled = Config.Item("drawDamageE").GetValue<bool>();
-		 	if (enbabled)
-		 	{		
-		 	
-		 	}
-		 }
+		 
        
        	static void Orbwalking_OnNonKillableMinion(AttackableUnit minion)
         {
@@ -154,7 +152,8 @@ namespace Kalista
                     JungleClear();
                     break;
             }         
-            MobSteal();            
+            MobSteal();
+            SaveMode();
 		}
 	 //Combo
 		static void Combo()
@@ -165,20 +164,21 @@ namespace Kalista
 		    useItems();
             if (Config.Item("cq").GetValue<bool>())
             {   
-            	if (Player.Mana >= Q.Instance.ManaCost + E.Instance.ManaCost - 10){
+            	if (Player.Mana >= (Q.Instance.ManaCost + E.Instance.ManaCost - 10)){
             		if (Q.IsReady() && !Player.IsDashing()) Q.CastIfHitchanceEquals(target, HitChance.VeryHigh);}
             }
             if (Config.Item("ce").GetValue<bool>()  )            	
             { 
-                if (!target.HasBuffOfType(BuffType.Invulnerability) && !target.HasBuff("shenstandunitedshield", true))
+                if (!target.HasBuffOfType(BuffType.Invulnerability) && !target.HasBuff("shenstandunitedshield", true) && !HasUndyingBuff(target))
                     {
                 	if ((target.Health  + target.HPRegenRate) <= GetEDamage(target) && E.IsReady() && target.IsValidTarget(E.Range))
-                	{debug( GetEDamage(target)+"damage Ecombo kill target: "+ target.Health+"/"+target.MaxHealth);E.Cast();}
+                	{debug("Ecombo kill target");E.Cast();}
                     }
-                else if (!Orbwalker.InAutoAttackRange(target) && target.HasBuff("KalistaExpungeMarker"))
-                {
-                	var combomionion = MinionManager.GetMinions(Player.ServerPosition, E.Range, MinionTypes.All, MinionTeam.Enemy).Where(x => x.Health <= GetEDamage(x) && E.IsReady() && E.IsInRange(x));
-                	if (E.IsReady()) E.Cast();debug("combo E target out of range");
+                else if (ObjectManager.Get<Obj_AI_Minion>().Any(o => o.Health < GetEDamage(o) && E.IsInRange(o) && E.IsReady()))
+                {  
+                	if (!Orbwalker.InAutoAttackRange(target) && target.HasBuff("KalistaExpungeMarker"))
+                	{E.Cast();debug("combo E target out of range");}
+                	if (Config.Item("Ekillminion").GetValue<bool>() && target.HasBuff("KalistaExpungeMarker") ) {E.Cast(); debug("Combo E mionions");}
                 }
             }            
         }
@@ -190,7 +190,7 @@ namespace Kalista
 
             if (Config.Item("hq").GetValue<bool>())
             {
-                var Qtarget = TargetSelector.GetTarget(Q.Range, TargetSelector.DamageType.Physical, true);
+                var Qtarget = TargetSelector.GetTarget(Q.Range, TargetSelector.DamageType.Physical);
                 if (Q.CanCast(Qtarget)  && !Player.IsDashing() && !Player.IsWindingUp)
                 	Q.CastIfHitchanceEquals(Qtarget, HitChance.VeryHigh);
             }
@@ -282,17 +282,17 @@ namespace Kalista
             	if  (!Config.Item("ks").GetValue<bool>() || (enemy.IsInvulnerable)||enemy.HasBuff("deathdefiedbuff"))
         			return;	 
                 //E
-               if ( E.IsReady() &&  Config.Item("eks").GetValue<bool>() && edamage >= (enemy.Health+enemy.HPRegenRate) && !enemy.HasBuffOfType(BuffType.Invulnerability)  && !enemy.HasBuff("shenstandunitedshield", true))
+                if ( E.IsReady() &&  Config.Item("eks").GetValue<bool>() && edamage >= (enemy.Health+enemy.HPRegenRate) && !enemy.HasBuffOfType(BuffType.Invulnerability)  && !enemy.HasBuff("shenstandunitedshield", true) && !HasUndyingBuff(enemy))
                 {
                 	if ( enemy.IsValidTarget(E.Range) )
                 	    
-                	  {debug(GetEDamage(enemy) +"damage Eks kill target:"+ enemy.Health+" Hp,enemy Armor:"+enemy.Armor);E.Cast();}
+                	  {debug("Eks kill target");E.Cast();}
                 	else if ( Player.Distance(enemy,true) > E.Range )
                 	{                                 
                 		var t = TargetSelector.GetTarget(E.Range,TargetSelector.DamageType.Physical);                
                 		if (t.IsValidTarget(E.Range) &&  t.HasBuff("KalistaExpungeMarker") &&  E.IsReady() && E.IsInRange(t)) {E.Cast();break;}
                 		 var Minions = MinionManager.GetMinions(Player.ServerPosition, E.Range, MinionTypes.All, MinionTeam.Enemy);
-                		 foreach (var Minion in Minions.Where(x => E.CanCast(x) && x.HasBuff("KalistaExpungeMarker"))){E.Cast(); debug("E Ks enemy out of E.Range");}
+                		 foreach (var Minion in Minions.Where(x => E.CanCast(x) && x.HasBuff("KalistaExpungeMarker"))){E.Cast(); debug("E Ks enemy out of E.range:"+E.Range);}
                 		                		
                 	}
                 }
@@ -304,12 +304,40 @@ namespace Kalista
 				}               
           	}
         }
+        
+        //Savemode
+        private static void SaveMode()
+        {
+            if (Player.IsRecalling() || Player.InFountain())
+                return;
+
+            var save = Config.Item("rsave").GetValue<bool>();
+            var allyHp = Config.Item("allyhp").GetValue<Slider>().Value;
+
+            if (save)
+            {
+                if (ConnectedAlly == null)
+                {
+                    foreach (var cAlly in from ally in ObjectManager.Get<Obj_AI_Hero>().Where(b => b.IsAlly && !b.IsDead && !b.IsMe) where Player.Distance(ally) < R.Range from buff in ally.Buffs where ally.HasBuff("kalistacoopstrikeally") select ally)
+                    {
+                        ConnectedAlly = cAlly;
+                        break;
+                    }
+                }
+                else
+                {                    
+                    if (ConnectedAlly.HealthPercent < allyHp && ConnectedAlly.CountEnemiesInRange(500) > 0)
+                    {
+                        R.Cast();
+                    }
+                }
+            }
+        }
         public static float GetEDamage(Obj_AI_Base target)
         {  var buff = target.Buffs.Find(b => b.Caster.IsMe && b.IsValidBuff() && b.DisplayName == "KalistaExpungeMarker");;
         	if (buff!=null && E.IsReady())
         	{
-            var a = Config.Item("edamereduce").GetValue<Slider>().Value; 
-            if (target.InventoryItems.Any(m => m.DisplayName == "Doran's Shield")) {a += a+8;}
+            var a = Config.Item("edamereduce").GetValue<Slider>().Value;                       
 			double armorPenPercent = Player.PercentArmorPenetrationMod;
             double armorPenFlat = Player.FlatArmorPenetrationMod;
             double k;          
@@ -329,8 +357,10 @@ namespace Kalista
                     {
                         k = k * 1.05;
                     }
-                    damage += new double[] {20, 30, 40, 50, 60}[E.Level -1] + Player.TotalAttackDamage*0.60 + (  new double[] {10, 14, 19, 25, 32 }[E.Level -1]+ new double[]{0.2f, 0.225f, 0.25f, 0.275f, 0.3f }[E.Level-1] *  Player.TotalAttackDamage) * (buff.Count-1);          
-                    return (float) (damage*k-a);
+                    double edamage = 0;
+                    edamage = new double[] {20, 30, 40, 50, 60}[E.Level -1] + Player.TotalAttackDamage*0.60 + (  new double[] {10, 14, 19, 25, 32 }[E.Level -1]+ new double[]{0.2f, 0.225f, 0.25f, 0.275f, 0.3f }[E.Level-1] *  Player.TotalAttackDamage) * (buff.Count-1);          
+                    if (target.InventoryItems.Any(m=> m.DisplayName == "Doran's Shield")) return (float) (k*(edamage)-a);
+                        return (float) (k*(edamage+damage)-a);
                 }
              if (target is Obj_AI_Minion)
              	{   
@@ -345,8 +375,42 @@ namespace Kalista
         public static void debug(string msg)
         {
             if (Config.Item("debug").GetValue<bool>())
-                Game.PrintChat(msg);
-        }              
+            	Console.WriteLine(msg);
+        }
+		
+		public static bool HasUndyingBuff(Obj_AI_Hero target)
+        {
+            // Tryndamere R
+            if (target.ChampionName == "Tryndamere" &&
+                target.Buffs.Any(b => b.Caster.NetworkId == target.NetworkId && b.IsValidBuff() && b.DisplayName == "Undying Rage"))
+            {
+                return true;
+            }
+
+            // Zilean R
+            if (target.Buffs.Any(b => b.IsValidBuff() && b.DisplayName == "Chrono Shift"))
+            {
+                return true;
+            }
+
+            // Kayle R
+            if (target.Buffs.Any(b => b.IsValidBuff() && b.DisplayName == "JudicatorIntervention"))
+            {
+                return true;
+            }
+             // Poppy R
+            if (target.ChampionName == "Poppy")
+            {
+                if (HeroManager.Allies.Any(o =>
+                    !o.IsMe &&
+                    o.Buffs.Any(b => b.Caster.NetworkId == target.NetworkId && b.IsValidBuff() && b.DisplayName == "PoppyDITarget")))
+                {
+                    return true;
+                }
+            }
+
+            return false;
+        }        
                
     }	  
 	
