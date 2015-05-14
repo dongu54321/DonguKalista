@@ -14,7 +14,7 @@ namespace Kalista
         static Orbwalking.Orbwalker Orbwalker;
         static Menu Config;
         static Spell Q, W, E, R;
-        static Obj_AI_Hero ConnectedAlly;
+         public static Obj_AI_Hero SoulBound { get; private set; }
         
        public static void Main(string[] args)
 	{
@@ -277,7 +277,7 @@ namespace Kalista
             foreach (var enemy in ObjectManager.Get<Obj_AI_Hero>().Where(x => x.IsValidTarget(Q.Range)))        			                    
         	{   
 				            	
-            	var qdamage = Player.GetSpellDamage(enemy, SpellSlot.Q);
+            	var qdamage = Q.GetDamage(enemy);
             	var edamage = GetEDamage(enemy);
             	if  (!Config.Item("ks").GetValue<bool>() || (enemy.IsInvulnerable)||enemy.HasBuff("deathdefiedbuff"))
         			return;	 
@@ -300,7 +300,7 @@ namespace Kalista
 				if ( Config.Item("qks").GetValue<bool>() && Q.IsReady())
 				{
 					if (  qdamage > enemy.Health+enemy.HPRegenRate/2)
-					{Q.CastIfHitchanceEquals(enemy, HitChance.High);debug("Q ks "+qdamage);}
+					{Q.CastIfHitchanceEquals(enemy, HitChance.VeryHigh);debug("Q ks "+qdamage);}
 				}               
           	}
         }
@@ -308,7 +308,7 @@ namespace Kalista
         //Savemode
         private static void SaveMode()
         {
-            if (Player.IsRecalling() || Player.InFountain())
+            if (Player.InFountain())
                 return;
 
             var save = Config.Item("rsave").GetValue<bool>();
@@ -316,17 +316,13 @@ namespace Kalista
 
             if (save)
             {
-                if (ConnectedAlly == null)
+                if ( SoulBound == null)
                 {
-                    foreach (var cAlly in from ally in ObjectManager.Get<Obj_AI_Hero>().Where(b => b.IsAlly && !b.IsDead && !b.IsMe) where Player.Distance(ally) < R.Range from buff in ally.Buffs where ally.HasBuff("kalistacoopstrikeally") select ally)
-                    {
-                        ConnectedAlly = cAlly;
-                        break;
-                    }
+                    SoulBound = HeroManager.Allies.Find(h => h.Buffs.Any(b => b.Caster.IsMe && b.Name.Contains("kalistacoopstrikeally")));
                 }
                 else
                 {                    
-                    if (ConnectedAlly.HealthPercent < allyHp && ConnectedAlly.CountEnemiesInRange(500) > 0)
+                	if (SoulBound.HealthPercent < allyHp && SoulBound.CountEnemiesInRange(500) > 0 && R.IsInRange(SoulBound) && R.IsReady())
                     {
                         R.Cast();
                     }
@@ -366,7 +362,7 @@ namespace Kalista
              	{   
              	    double damage1 = 0;
             		damage1 += new double[] {20, 30, 40, 50, 60}[E.Level -1] + Player.TotalAttackDamage*0.60 + (  new double[] {10, 14, 19, 25, 32 }[E.Level -1]+ new double[]{0.2f, 0.225f, 0.25f, 0.275f, 0.3f }[E.Level-1] *  Player.TotalAttackDamage) * (buff.Count-1); 
-					return (float) (damage1*k-a);
+            		return (float) Player.CalcDamage(target,Damage.DamageType.Physical, ((damage1*k)-a));
              	}
              }
         	return 1;
@@ -375,7 +371,7 @@ namespace Kalista
         public static void debug(string msg)
         {
             if (Config.Item("debug").GetValue<bool>())
-            	Console.WriteLine(msg);
+            	Notifications.AddNotification(msg, 1000);
         }
 		
 		public static bool HasUndyingBuff(Obj_AI_Hero target)
