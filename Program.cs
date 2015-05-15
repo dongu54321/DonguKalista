@@ -362,7 +362,8 @@ namespace Kalista
              	{   
              	    double damage1 = 0;
             		damage1 += new double[] {20, 30, 40, 50, 60}[E.Level -1] + Player.TotalAttackDamage*0.60 + (  new double[] {10, 14, 19, 25, 32 }[E.Level -1]+ new double[]{0.2f, 0.225f, 0.25f, 0.275f, 0.3f }[E.Level-1] *  Player.TotalAttackDamage) * (buff.Count-1); 
-            		return (float) Player.CalcDamage(target,Damage.DamageType.Physical, ((damage1*k)-a));
+            		//return (float) Player.CalcDamage(target,Damage.DamageType.Physical, ((damage1*k)-a));//
+            		return (float) (E.GetDamage(target)-a);
              	}
              }
         	return 1;
