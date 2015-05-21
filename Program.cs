@@ -73,8 +73,9 @@ namespace Kalista
                 miscmenu.AddItem(new MenuItem("allyhp", "If Ally HP under ").SetValue(new Slider(10, 100, 5)));
                 miscmenu.AddItem(new MenuItem("mobsteal", "Steal Mods").SetValue(true));
                 miscmenu.AddItem(new MenuItem("edamereduce", "E dame ruduce").SetValue(new Slider(0, 100, 0)));
-                miscmenu.AddItem(new MenuItem("lasthitassist", "Use E To Last Hit").SetValue(true));                
-               
+                miscmenu.AddItem(new MenuItem("lasthitassist", "Use when you  ").SetValue(true));
+				miscmenu.AddItem(new MenuItem("Elowhp", "Auto E when low hp").SetValue(true));                
+                miscmenu.AddItem(new MenuItem("Elowhpslider", "Auto E when hp <").SetValue(new Slider(5, 20, 0)));
             }
              MenuItem drawEDamageMenu = new MenuItem("Draw_EDamage", "Draw E Damage",true).SetValue(true);
              MenuItem drawFill = new MenuItem("Draw_Fill", "Draw E Damage Fill",true).SetValue(new Circle(true, Color.FromArgb(90, 255, 169, 4))); 
@@ -130,7 +131,7 @@ namespace Kalista
       	static void Obj_AI_Hero_OnProcessSpellCast(Obj_AI_Base sender, GameObjectProcessSpellCastEventArgs args)
         {
             if (sender.IsMe && args.SData.Name == "KalistaExpungeWrapper")
-                    Utility.DelayAction.Add(200, Orbwalking.ResetAutoAttackTimer);            
+                    Utility.DelayAction.Add(100, Orbwalking.ResetAutoAttackTimer);            
         }
 	
         
@@ -165,7 +166,7 @@ namespace Kalista
             if (Config.Item("cq").GetValue<bool>())
             {   
             	if (Player.Mana >= (Q.Instance.ManaCost + E.Instance.ManaCost - 10)){
-            		if (Q.IsReady() && !Player.IsDashing()) Q.CastIfHitchanceEquals(target, HitChance.VeryHigh);}
+            		if (Q.IsReady() && !Player.IsDashing()) {Q.CastIfHitchanceEquals(target, HitChance.VeryHigh);}}
             }
             if (Config.Item("ce").GetValue<bool>()  )            	
             { 
@@ -296,6 +297,9 @@ namespace Kalista
                 		                		
                 	}
                 }
+                //Auto E low hp
+                if (E.IsReady() && Config.Item("Elowhp").GetValue<bool>() && Player.HealthPercent < Config.Item("Elowhpslider").GetValue<Slider>().Value
+                    && enemy.HasBuff("KalistaExpungeMarker") && E.IsInRange(enemy) ) E.Cast();
                 //Q
 				if ( Config.Item("qks").GetValue<bool>() && Q.IsReady())
 				{
