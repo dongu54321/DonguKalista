@@ -73,7 +73,7 @@ namespace Kalista
                 miscmenu.AddItem(new MenuItem("allyhp", "If Ally HP under ").SetValue(new Slider(10, 100, 5)));
                 miscmenu.AddItem(new MenuItem("mobsteal", "Steal Mods").SetValue(true));
                 miscmenu.AddItem(new MenuItem("edamereduce", "E dame ruduce").SetValue(new Slider(0, 100, 0)));
-                miscmenu.AddItem(new MenuItem("lasthitassist", "Use when you  ").SetValue(true));
+                miscmenu.AddItem(new MenuItem("lasthitassist", "Lasthit helper").SetValue(true));
 				miscmenu.AddItem(new MenuItem("Elowhp", "Auto E when low hp").SetValue(true));                
                 miscmenu.AddItem(new MenuItem("Elowhpslider", "Auto E when hp <").SetValue(new Slider(5, 20, 0)));
             }
@@ -131,7 +131,7 @@ namespace Kalista
       	static void Obj_AI_Hero_OnProcessSpellCast(Obj_AI_Base sender, GameObjectProcessSpellCastEventArgs args)
         {
             if (sender.IsMe && args.SData.Name == "KalistaExpungeWrapper")
-                    Utility.DelayAction.Add(100, Orbwalking.ResetAutoAttackTimer);            
+                    Utility.DelayAction.Add(200, Orbwalking.ResetAutoAttackTimer);            
         }
 	
         
