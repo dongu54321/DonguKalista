@@ -264,7 +264,7 @@ namespace Kalista
                             Items.UseItem(itemId, target);
                     }
                 }
-            var ghost = ItemData.Youmuus_Ghostblade.GetItem();           
+            var ghost = LeagueSharp.Common.Data.ItemData.Youmuus_Ghostblade.GetItem();       
     
 
             if (ghost.IsReady() && ghost.IsOwned(Player) && Orbwalker.InAutoAttackRange(target))
